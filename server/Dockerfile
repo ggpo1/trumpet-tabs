@@ -18,7 +18,7 @@ ENV NODE_ENV=production
 ENV PORT=5181
 
 COPY package.json package-lock.json* ./
-RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi --omit=dev
+RUN npm ci
 
 COPY --from=build /app/dist ./dist
 

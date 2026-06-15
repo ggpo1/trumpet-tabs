@@ -1,0 +1,9 @@
+services:
+  trumpet-tabs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: trumpet-tabs
+    ports:
+      - "5180:80"
+    restart: unless-stopped

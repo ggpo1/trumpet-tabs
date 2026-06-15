@@ -2,6 +2,7 @@ node_modules
 dist
 .git
 .context
+server
 *.md
 !README.md
 Dockerfile

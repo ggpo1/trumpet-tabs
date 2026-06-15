@@ -1,13 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import * as api from './api';
 import { NoteCard } from './components/NoteCard';
 import { SequenceStrip } from './components/SequenceStrip';
 import { ValvePanel } from './components/ValvePanel';
-import {
-  exportSongJson,
-  importSongJson,
-  loadSongs,
-  saveSongs,
-} from './storage';
+import { exportSongJson, importSongJson } from './storage';
 import {
   createNote,
   createSong,
@@ -18,64 +14,124 @@ import {
 } from './types';
 
 function useSongs() {
-  const [songs, setSongs] = useState<Song[]>(() => loadSongs());
-  const [activeId, setActiveId] = useState<string | null>(() => loadSongs()[0]?.id ?? null);
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const saveTimerRef = useRef<number | null>(null);
+
+  const loadSongs = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await api.fetchSongs();
+      setSongs(data);
+      setActiveId((current) => current ?? data[0]?.id ?? null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось загрузить песни');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    saveSongs(songs);
-  }, [songs]);
+    void loadSongs();
+    return () => {
+      if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+    };
+  }, [loadSongs]);
 
   const activeSong = songs.find((s) => s.id === activeId) ?? null;
+
+  const persistSong = useCallback((song: Song) => {
+    if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = window.setTimeout(() => {
+      api.updateSong(song).catch((err) => {
+        setError(err instanceof Error ? err.message : 'Ошибка сохранения');
+      });
+    }, 400);
+  }, []);
 
   const updateActive = useCallback(
     (patch: Partial<Song>) => {
       if (!activeId) return;
-      setSongs((prev) =>
-        prev.map((s) =>
+      setSongs((prev) => {
+        const next = prev.map((s) =>
           s.id === activeId ? { ...s, ...patch, updatedAt: new Date().toISOString() } : s,
-        ),
-      );
+        );
+        const updated = next.find((s) => s.id === activeId);
+        if (updated) persistSong(updated);
+        return next;
+      });
     },
-    [activeId],
+    [activeId, persistSong],
   );
 
-  const createNewSong = () => {
-    const song = createSong();
-    setSongs((prev) => [song, ...prev]);
-    setActiveId(song.id);
+  const createNewSong = async () => {
+    setError(null);
+    try {
+      const song = await api.createSong(createSong());
+      setSongs((prev) => [song, ...prev]);
+      setActiveId(song.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось создать песню');
+    }
   };
 
-  const deleteSong = (id: string) => {
-    setSongs((prev) => {
-      const next = prev.filter((s) => s.id !== id);
-      if (activeId === id) setActiveId(next[0]?.id ?? null);
-      return next;
-    });
+  const deleteSong = async (id: string) => {
+    setError(null);
+    try {
+      await api.deleteSong(id);
+      setSongs((prev) => {
+        const next = prev.filter((s) => s.id !== id);
+        if (activeId === id) setActiveId(next[0]?.id ?? null);
+        return next;
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось удалить песню');
+    }
   };
 
-  const duplicateSong = (song: Song) => {
-    const copy = createSong({
-      ...song,
-      title: `${song.title} (копия)`,
-      notes: song.notes.map((n) => ({ ...n, id: crypto.randomUUID() })),
-    });
-    setSongs((prev) => [copy, ...prev]);
-    setActiveId(copy.id);
+  const duplicateSong = async (song: Song) => {
+    setError(null);
+    try {
+      const copy = createSong({
+        ...song,
+        title: `${song.title} (копия)`,
+        notes: song.notes.map((n) => ({ ...n, id: crypto.randomUUID() })),
+      });
+      const created = await api.createSong(copy);
+      setSongs((prev) => [created, ...prev]);
+      setActiveId(created.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось скопировать песню');
+    }
+  };
+
+  const importSong = async (song: Song) => {
+    setError(null);
+    try {
+      const created = await api.createSong(song);
+      setSongs((prev) => [created, ...prev]);
+      setActiveId(created.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось импортировать песню');
+    }
   };
 
   return {
     songs,
     activeSong,
     activeId,
+    loading,
+    error,
     setActiveId,
     updateActive,
     createNewSong,
     deleteSong,
     duplicateSong,
-    importSong: (song: Song) => {
-      setSongs((prev) => [song, ...prev]);
-      setActiveId(song.id);
-    },
+    importSong,
+    reload: loadSongs,
   };
 }
 
@@ -84,12 +140,15 @@ export default function App() {
     songs,
     activeSong,
     activeId,
+    loading,
+    error,
     setActiveId,
     updateActive,
     createNewSong,
     deleteSong,
     duplicateSong,
     importSong,
+    reload,
   } = useSongs();
 
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
@@ -209,7 +268,7 @@ export default function App() {
     reader.onload = () => {
       try {
         const song = importSongJson(String(reader.result));
-        importSong(song);
+        void importSong(song);
       } catch {
         alert('Не удалось импортировать файл');
       }
@@ -217,13 +276,38 @@ export default function App() {
     reader.readAsText(file);
   };
 
+  if (loading) {
+    return (
+      <div className="app app--empty">
+        <header className="hero">
+          <h1>Trumpet Tabs</h1>
+          <p>Загрузка песен…</p>
+        </header>
+      </div>
+    );
+  }
+
+  if (error && songs.length === 0) {
+    return (
+      <div className="app app--empty">
+        <header className="hero">
+          <h1>Trumpet Tabs</h1>
+          <p className="error-banner">{error}</p>
+          <button type="button" className="btn btn--primary" onClick={() => void reload()}>
+            Повторить
+          </button>
+        </header>
+      </div>
+    );
+  }
+
   if (!activeSong && songs.length === 0) {
     return (
       <div className="app app--empty">
         <header className="hero">
           <h1>Trumpet Tabs</h1>
           <p>Редактор аппликатуры для трубы — отмечайте клапаны и собирайте песни</p>
-          <button type="button" className="btn btn--primary" onClick={createNewSong}>
+          <button type="button" className="btn btn--primary" onClick={() => void createNewSong()}>
             Создать первую песню
           </button>
         </header>
@@ -233,10 +317,11 @@ export default function App() {
 
   return (
     <div className="app">
+      {error && <div className="error-toast">{error}</div>}
       <aside className="sidebar">
         <div className="sidebar__head">
           <h1>Trumpet Tabs</h1>
-          <button type="button" className="btn btn--small btn--primary" onClick={createNewSong}>
+          <button type="button" className="btn btn--small btn--primary" onClick={() => void createNewSong()}>
             + Новая
           </button>
         </div>
@@ -302,14 +387,14 @@ export default function App() {
                 <button type="button" className="btn" onClick={() => fileInputRef.current?.click()}>
                   Импорт
                 </button>
-                <button type="button" className="btn" onClick={() => duplicateSong(activeSong)}>
+                <button type="button" className="btn" onClick={() => void duplicateSong(activeSong)}>
                   Копия
                 </button>
                 <button
                   type="button"
                   className="btn btn--danger"
                   onClick={() => {
-                    if (confirm('Удалить эту песню?')) deleteSong(activeSong.id);
+                    if (confirm('Удалить эту песню?')) void deleteSong(activeSong.id);
                   }}
                 >
                   Удалить

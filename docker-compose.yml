@@ -1,9 +1,45 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: trumpet-tabs-db
+    environment:
+      POSTGRES_USER: trumpet
+      POSTGRES_PASSWORD: trumpet
+      POSTGRES_DB: trumpet_tabs
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U trumpet -d trumpet_tabs']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: trumpet-tabs-api
+    environment:
+      DATABASE_URL: postgres://trumpet:trumpet@postgres:5432/trumpet_tabs
+      PORT: 5181
+    ports:
+      - '5181:5181'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
   trumpet-tabs:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: trumpet-tabs
     ports:
-      - "5180:80"
+      - '5180:80'
+    depends_on:
+      - api
     restart: unless-stopped
+
+volumes:
+  pgdata:

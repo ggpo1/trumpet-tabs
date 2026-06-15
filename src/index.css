@@ -407,9 +407,17 @@ select {
 }
 
 .selected-preview h3 {
-  margin: 0 0 0.75rem;
+  margin: 0;
   font-size: 0.95rem;
   color: var(--accent);
+}
+
+.selected-preview__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
 }
 
 /* Valve panel */

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as api from './api';
+import { trumpetPlayer } from './audio/trumpetPlayer';
 import { NoteCard } from './components/NoteCard';
 import { SequenceStrip } from './components/SequenceStrip';
 import { ValvePanel } from './components/ValvePanel';
@@ -224,6 +225,7 @@ export default function App() {
 
   const stopPlayback = () => {
     if (playTimerRef.current) window.clearTimeout(playTimerRef.current);
+    trumpetPlayer.stopAll();
     setIsPlaying(false);
     setPlayingNoteId(null);
   };
@@ -242,6 +244,8 @@ export default function App() {
       setPlayingNoteId(note.id);
       setSelectedNoteId(note.id);
       const ms = durationMs(note.duration, activeSong.tempo);
+      const durationSec = ms / 1000;
+      void trumpetPlayer.playNote(note, durationSec);
       playTimerRef.current = window.setTimeout(() => {
         i += 1;
         if (i >= activeSong.notes.length) stopPlayback();
@@ -250,6 +254,11 @@ export default function App() {
     };
 
     step();
+  };
+
+  const previewSelectedNote = () => {
+    if (!selectedNote) return;
+    void trumpetPlayer.previewNote(selectedNote);
   };
 
   const handleExport = () => {
@@ -447,7 +456,12 @@ export default function App() {
 
             {selectedNote && (
               <section className="selected-preview">
-                <h3>Выбранная нота</h3>
+                <div className="selected-preview__head">
+                  <h3>Выбранная нота</h3>
+                  <button type="button" className="btn btn--small" onClick={previewSelectedNote}>
+                    ♪ Послушать
+                  </button>
+                </div>
                 <ValvePanel
                   valves={selectedNote.valves}
                   onChange={(valves) => updateNote(selectedNote.id, { valves })}

@@ -1,8 +1,8 @@
 # Trumpet Tabs
 
-Редактор аппликатуры для трубы — отмечайте клапаны и собирайте разборы песен.
+Trumpet fingering editor — mark valve combinations and build song breakdowns.
 
-## Локальная разработка
+## Local Development
 
 ### 1. PostgreSQL
 
@@ -15,7 +15,7 @@ docker run -d --name trumpet-pg \
   postgres:16-alpine
 ```
 
-### 2. API (порт 5181)
+### 2. API (port 5181)
 
 ```bash
 cd server
@@ -23,33 +23,33 @@ npm install
 npm run dev
 ```
 
-### 3. Фронтенд
+### 3. Frontend
 
 ```bash
 npm install
 npm run dev
 ```
 
-Откройте http://localhost:5173 — запросы к `/api` проксируются на http://localhost:5181
+Open http://localhost:5173 — requests to `/api` are proxied to http://localhost:5181
 
-## Возможности
+## Features
 
-- **3 клапана** — кликайте, чтобы отметить зажатые клапаны (1, 2, 3 или ○ — все открыты)
-- **Последовательность нот** — добавляйте ноты, указывайте длительность и слоги из текста песни
-- **Подсказка аппликатуры** — при вводе «до», «ре», «G» и т.д. подставляется стандартная аппликатура Bb-трубы
-- **Проигрывание** — визуальный проход по нотам с учётом BPM
-- **Несколько песен** — сохранение в PostgreSQL, экспорт/импорт JSON
+- **3 valves** — click to mark pressed valves (1, 2, 3, or ○ for all open)
+- **Note sequence** — add notes, set durations, and attach syllables from song lyrics
+- **Fingering hint** — when you type notes like "C", "D", "G", etc., standard Bb trumpet fingering is suggested
+- **Playback** — visual note-by-note playback synchronized with BPM
+- **Multiple songs** — saved in PostgreSQL, with JSON export/import
 
 ## API
 
-| Метод | Путь | Описание |
+| Method | Path | Description |
 |-------|------|----------|
-| GET | `/health` | Проверка сервера |
-| GET | `/api/songs` | Список песен |
-| GET | `/api/songs/:id` | Одна песня |
-| POST | `/api/songs` | Создать песню |
-| PUT | `/api/songs/:id` | Обновить песню |
-| DELETE | `/api/songs/:id` | Удалить песню |
+| GET | `/health` | Server health check |
+| GET | `/api/songs` | List songs |
+| GET | `/api/songs/:id` | Get a single song |
+| POST | `/api/songs` | Create a song |
+| PUT | `/api/songs/:id` | Update a song |
+| DELETE | `/api/songs/:id` | Delete a song |
 
 ## Docker Compose
 
@@ -57,19 +57,19 @@ npm run dev
 docker compose up -d --build
 ```
 
-- Фронтенд: http://localhost:5180
+- Frontend: http://localhost:5180
 - API: http://localhost:5181
-- PostgreSQL: `postgres://trumpet:trumpet@localhost:5432/trumpet_tabs` (внутри сети — хост `postgres`)
+- PostgreSQL: `postgres://trumpet:trumpet@localhost:5432/trumpet_tabs` (inside the Docker network, host is `postgres`)
 
-Остановка:
+Stop:
 
 ```bash
 docker compose down
 ```
 
-Данные БД сохраняются в volume `pgdata`.
+Database data is persisted in the `pgdata` volume.
 
-## Сборка фронтенда
+## Frontend Build
 
 ```bash
 npm run build

@@ -13,7 +13,7 @@
   --success: #5de8a8;
   --radius: 12px;
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
-  font-family: 'Outfit', system-ui, sans-serif;
+  font-family: "Outfit", system-ui, sans-serif;
   line-height: 1.5;
   color: var(--text);
   background: var(--bg);
@@ -28,9 +28,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(232, 168, 56, 0.12), transparent),
-    var(--bg);
+  background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(232, 168, 56, 0.12), transparent), var(--bg);
 }
 
 #root {
@@ -117,7 +115,9 @@ select {
   background: transparent;
   color: var(--text);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .song-item:hover {
@@ -225,7 +225,9 @@ select {
   background: var(--bg-card);
   color: var(--text);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .btn:hover:not(:disabled) {
@@ -319,7 +321,10 @@ select {
   background: var(--bg-card);
   color: var(--text);
   cursor: pointer;
-  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  transition:
+    transform 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 .sequence-chip:hover {
@@ -343,7 +348,7 @@ select {
 }
 
 .sequence-chip__valves {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   font-size: 0.8rem;
   color: var(--accent);
 }
@@ -389,7 +394,7 @@ select {
   border-radius: var(--radius);
 }
 
-.quick-add__row input[type='text'] {
+.quick-add__row input[type="text"] {
   flex: 1;
   min-width: 140px;
   padding: 0.6rem 0.8rem;
@@ -429,7 +434,7 @@ select {
 }
 
 .valve-panel__code {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   font-size: 1.1rem;
   color: var(--accent);
   font-weight: 600;
@@ -454,7 +459,10 @@ select {
   border-radius: 10px;
   background: var(--bg-card);
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    transform 0.1s;
   min-width: 3rem;
 }
 
@@ -480,6 +488,11 @@ select {
 .valve-btn__num {
   font-weight: 700;
   font-size: 0.9rem;
+  color: var(--valve);
+}
+
+.valve-btn__num--pressed {
+  color: var(--accent);
 }
 
 .valve-btn__stem {
@@ -487,7 +500,9 @@ select {
   height: 1.5rem;
   border-radius: 4px;
   background: var(--valve);
-  transition: transform 0.15s, background 0.15s;
+  transition:
+    transform 0.15s,
+    background 0.15s;
 }
 
 .valve-panel--sm .valve-btn__stem {
@@ -512,7 +527,9 @@ select {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 .note-card:hover {
@@ -629,7 +646,7 @@ select {
 }
 
 .reference-item strong {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   color: var(--accent);
 }
 

@@ -10,12 +10,19 @@ export interface TabNote {
   lyric: string;
 }
 
+export interface SongFolder {
+  id: string;
+  name: string;
+  updatedAt: string;
+}
+
 export interface Song {
   id: string;
   title: string;
   artist: string;
   tempo: number;
   notes: TabNote[];
+  folderId: string | null;
   updatedAt: string;
 }
 
@@ -25,6 +32,14 @@ export interface SongRow {
   artist: string;
   tempo: number;
   notes: TabNote[];
+  folder_id: string | null;
+  updated_at: Date;
+  created_at: Date;
+}
+
+export interface SongFolderRow {
+  id: string;
+  name: string;
   updated_at: Date;
   created_at: Date;
 }

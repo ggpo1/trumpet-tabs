@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as api from '../api';
-import { createSong, type Song } from '../types';
+import { createFolder, createSong, type Song, type SongFolder } from '../types';
 
 export function useSongs() {
   const [songs, setSongs] = useState<Song[]>([]);
+  const [folders, setFolders] = useState<SongFolder[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -13,9 +14,10 @@ export function useSongs() {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.fetchSongs();
-      setSongs(data);
-      setActiveId((current) => current ?? data[0]?.id ?? null);
+      const [songsData, foldersData] = await Promise.all([api.fetchSongs(), api.fetchFolders()]);
+      setSongs(songsData.map((song) => ({ ...song, folderId: song.folderId ?? null })));
+      setFolders(foldersData);
+      setActiveId((current) => current ?? songsData[0]?.id ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось загрузить песни');
     } finally {
@@ -56,10 +58,10 @@ export function useSongs() {
     [activeId, persistSong],
   );
 
-  const createNewSong = async () => {
+  const createNewSong = async (folderId: string | null = null) => {
     setError(null);
     try {
-      const song = await api.createSong(createSong());
+      const song = await api.createSong(createSong({ folderId }));
       setSongs((prev) => [song, ...prev]);
       setActiveId(song.id);
     } catch (err) {
@@ -108,8 +110,64 @@ export function useSongs() {
     }
   };
 
+  const createNewFolder = async (name?: string) => {
+    setError(null);
+    try {
+      const folder = await api.createFolder(createFolder({ name: name?.trim() || 'Новая папка' }));
+      setFolders((prev) => [...prev, folder].sort((a, b) => a.name.localeCompare(b.name, 'ru')));
+      return folder;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось создать папку');
+      return null;
+    }
+  };
+
+  const renameFolder = async (id: string, name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setError(null);
+    try {
+      const folder = folders.find((f) => f.id === id);
+      if (!folder) return;
+      const updated = await api.updateFolder({ ...folder, name: trimmed });
+      setFolders((prev) =>
+        prev.map((f) => (f.id === id ? updated : f)).sort((a, b) => a.name.localeCompare(b.name, 'ru')),
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось переименовать папку');
+    }
+  };
+
+  const deleteFolderById = async (id: string) => {
+    setError(null);
+    try {
+      await api.deleteFolder(id);
+      setFolders((prev) => prev.filter((f) => f.id !== id));
+      setSongs((prev) => prev.map((s) => (s.folderId === id ? { ...s, folderId: null } : s)));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось удалить папку');
+    }
+  };
+
+  const moveSongToFolder = async (songId: string, folderId: string | null) => {
+    setError(null);
+    const song = songs.find((s) => s.id === songId);
+    if (!song || song.folderId === folderId) return;
+
+    const updated = { ...song, folderId, updatedAt: new Date().toISOString() };
+    setSongs((prev) => prev.map((s) => (s.id === songId ? updated : s)));
+
+    try {
+      await api.updateSong(updated);
+    } catch (err) {
+      setSongs((prev) => prev.map((s) => (s.id === songId ? song : s)));
+      setError(err instanceof Error ? err.message : 'Не удалось переместить песню');
+    }
+  };
+
   return {
     songs,
+    folders,
     activeSong,
     activeId,
     loading,
@@ -120,6 +178,10 @@ export function useSongs() {
     deleteSong,
     duplicateSong,
     importSong,
+    createNewFolder,
+    renameFolder,
+    deleteFolderById,
+    moveSongToFolder,
     reload: loadSongs,
   };
 }

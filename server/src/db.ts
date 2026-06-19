@@ -1,5 +1,5 @@
 import pg from 'pg';
-import type { Song, SongRow } from './types.js';
+import type { Song, SongFolder, SongFolderRow, SongRow } from './types.js';
 
 const { Pool } = pg;
 
@@ -15,6 +15,15 @@ export function rowToSong(row: SongRow): Song {
     artist: row.artist,
     tempo: row.tempo,
     notes: row.notes,
+    folderId: row.folder_id,
+    updatedAt: row.updated_at.toISOString(),
+  };
+}
+
+export function rowToFolder(row: SongFolderRow): SongFolder {
+  return {
+    id: row.id,
+    name: row.name,
     updatedAt: row.updated_at.toISOString(),
   };
 }
@@ -38,6 +47,16 @@ export async function initDb(): Promise<void> {
         );
 
         CREATE INDEX IF NOT EXISTS songs_updated_at_idx ON songs (updated_at DESC);
+
+        CREATE TABLE IF NOT EXISTS song_folders (
+          id UUID PRIMARY KEY,
+          name TEXT NOT NULL DEFAULT 'Новая папка',
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+
+        ALTER TABLE songs ADD COLUMN IF NOT EXISTS folder_id UUID REFERENCES song_folders(id) ON DELETE SET NULL;
+        CREATE INDEX IF NOT EXISTS songs_folder_id_idx ON songs (folder_id);
       `);
       client.release();
       return;

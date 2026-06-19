@@ -12,6 +12,7 @@ export function importSongJson(json: string): Song {
   return {
     ...data,
     id: crypto.randomUUID(),
+    folderId: data.folderId ?? null,
     updatedAt: new Date().toISOString(),
   };
 }

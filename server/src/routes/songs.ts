@@ -30,20 +30,21 @@ function parseSongBody(body: unknown, id?: string): Song | null {
     artist: typeof data.artist === 'string' ? data.artist : '',
     tempo: typeof data.tempo === 'number' && data.tempo > 0 ? data.tempo : 100,
     notes: data.notes,
+    folderId: data.folderId === null || typeof data.folderId === 'string' ? data.folderId ?? null : null,
     updatedAt: new Date().toISOString(),
   };
 }
 
 songsRouter.get('/', async (_req, res) => {
   const result = await pool.query<SongRow>(
-    'SELECT id, title, artist, tempo, notes, created_at, updated_at FROM songs ORDER BY updated_at DESC',
+    'SELECT id, title, artist, tempo, notes, folder_id, created_at, updated_at FROM songs ORDER BY updated_at DESC',
   );
   res.json(result.rows.map(rowToSong));
 });
 
 songsRouter.get('/:id', async (req, res) => {
   const result = await pool.query<SongRow>(
-    'SELECT id, title, artist, tempo, notes, created_at, updated_at FROM songs WHERE id = $1',
+    'SELECT id, title, artist, tempo, notes, folder_id, created_at, updated_at FROM songs WHERE id = $1',
     [req.params.id],
   );
   if (result.rowCount === 0) {
@@ -61,10 +62,10 @@ songsRouter.post('/', async (req, res) => {
   }
 
   const result = await pool.query<SongRow>(
-    `INSERT INTO songs (id, title, artist, tempo, notes, updated_at)
-     VALUES ($1, $2, $3, $4, $5::jsonb, NOW())
-     RETURNING id, title, artist, tempo, notes, created_at, updated_at`,
-    [song.id, song.title, song.artist, song.tempo, JSON.stringify(song.notes)],
+    `INSERT INTO songs (id, title, artist, tempo, notes, folder_id, updated_at)
+     VALUES ($1, $2, $3, $4, $5::jsonb, $6, NOW())
+     RETURNING id, title, artist, tempo, notes, folder_id, created_at, updated_at`,
+    [song.id, song.title, song.artist, song.tempo, JSON.stringify(song.notes), song.folderId],
   );
 
   res.status(201).json(rowToSong(result.rows[0]));
@@ -79,10 +80,10 @@ songsRouter.put('/:id', async (req, res) => {
 
   const result = await pool.query<SongRow>(
     `UPDATE songs
-     SET title = $2, artist = $3, tempo = $4, notes = $5::jsonb, updated_at = NOW()
+     SET title = $2, artist = $3, tempo = $4, notes = $5::jsonb, folder_id = $6, updated_at = NOW()
      WHERE id = $1
-     RETURNING id, title, artist, tempo, notes, created_at, updated_at`,
-    [song.id, song.title, song.artist, song.tempo, JSON.stringify(song.notes)],
+     RETURNING id, title, artist, tempo, notes, folder_id, created_at, updated_at`,
+    [song.id, song.title, song.artist, song.tempo, JSON.stringify(song.notes), song.folderId],
   );
 
   if (result.rowCount === 0) {

@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import { initDb } from "./db.js";
+import { foldersRouter } from "./routes/folders.js";
 import { songsRouter } from "./routes/songs.js";
 
 const app = express();
@@ -14,6 +15,7 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/api/songs", songsRouter);
+app.use("/api/folders", foldersRouter);
 
 async function main() {
   await initDb();

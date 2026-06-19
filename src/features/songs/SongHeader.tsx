@@ -1,11 +1,13 @@
 import type { RefObject } from 'react';
-import type { Song } from '../../types';
+import type { Song, SongFolder } from '../../types';
 
 interface SongHeaderProps {
   song: Song;
+  folders: SongFolder[];
   isPlaying: boolean;
   fileInputRef: RefObject<HTMLInputElement | null>;
   onUpdate: (patch: Partial<Song>) => void;
+  onMoveToFolder: (folderId: string | null) => void;
   onPlay: () => void;
   onStop: () => void;
   onExport: () => void;
@@ -17,9 +19,11 @@ interface SongHeaderProps {
 
 export function SongHeader({
   song,
+  folders,
   isPlaying,
   fileInputRef,
   onUpdate,
+  onMoveToFolder,
   onPlay,
   onStop,
   onExport,
@@ -45,6 +49,22 @@ export function SongHeader({
         />
       </div>
       <div className="song-header__controls">
+        {folders.length > 0 && (
+          <label className="folder-field">
+            <span>Папка</span>
+            <select
+              value={song.folderId ?? ''}
+              onChange={(e) => onMoveToFolder(e.target.value || null)}
+            >
+              <option value="">Без папки</option>
+              {folders.map((folder) => (
+                <option key={folder.id} value={folder.id}>
+                  {folder.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <label className="tempo-field">
           <span>BPM</span>
           <input

@@ -6,6 +6,7 @@ import { useSongs } from './hooks/useSongs';
 export default function App() {
   const {
     songs,
+    folders,
     activeSong,
     activeId,
     loading,
@@ -16,6 +17,10 @@ export default function App() {
     deleteSong,
     duplicateSong,
     importSong,
+    createNewFolder,
+    renameFolder,
+    deleteFolderById,
+    moveSongToFolder,
     reload,
   } = useSongs();
 
@@ -36,19 +41,26 @@ export default function App() {
       {error && <div className="error-toast">{error}</div>}
       <SongSidebar
         songs={songs}
+        folders={folders}
         activeId={activeId}
         onSelectSong={setActiveId}
-        onCreateSong={() => void createNewSong()}
+        onCreateSong={(folderId) => void createNewSong(folderId ?? null)}
+        onCreateFolder={createNewFolder}
+        onRenameFolder={(id, name) => void renameFolder(id, name)}
+        onDeleteFolder={(id) => void deleteFolderById(id)}
+        onMoveSong={(songId, folderId) => void moveSongToFolder(songId, folderId)}
       />
       <main className="workspace">
         {activeSong && (
           <SongWorkspace
             song={activeSong}
+            folders={folders}
             activeId={activeId}
             updateActive={updateActive}
             onDuplicate={duplicateSong}
             onDelete={deleteSong}
             onImport={importSong}
+            onMoveToFolder={moveSongToFolder}
           />
         )}
       </main>

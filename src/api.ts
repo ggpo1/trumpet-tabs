@@ -1,4 +1,4 @@
-import type { Song } from './types';
+import type { Song, SongFolder } from './types';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? '/api';
 
@@ -50,4 +50,26 @@ export async function updateSong(song: Song): Promise<Song> {
 
 export async function deleteSong(id: string): Promise<void> {
   await request<void>(`/songs/${id}`, { method: 'DELETE' });
+}
+
+export async function fetchFolders(): Promise<SongFolder[]> {
+  return request<SongFolder[]>('/folders');
+}
+
+export async function createFolder(folder: SongFolder): Promise<SongFolder> {
+  return request<SongFolder>('/folders', {
+    method: 'POST',
+    body: JSON.stringify(folder),
+  });
+}
+
+export async function updateFolder(folder: SongFolder): Promise<SongFolder> {
+  return request<SongFolder>(`/folders/${folder.id}`, {
+    method: 'PUT',
+    body: JSON.stringify(folder),
+  });
+}
+
+export async function deleteFolder(id: string): Promise<void> {
+  await request<void>(`/folders/${id}`, { method: 'DELETE' });
 }

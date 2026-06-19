@@ -2,7 +2,7 @@ import { SequenceStrip } from '../../components/SequenceStrip';
 import { useNotesEditor } from '../../hooks/useNotesEditor';
 import { usePlayback } from '../../hooks/usePlayback';
 import { useSongImportExport } from '../../hooks/useSongImportExport';
-import type { Song } from '../../types';
+import type { Song, SongFolder } from '../../types';
 import { NotesList } from '../notes/NotesList';
 import { QuickAddNote } from '../notes/QuickAddNote';
 import { SelectedNotePreview } from '../notes/SelectedNotePreview';
@@ -11,20 +11,24 @@ import { SongHeader } from '../songs/SongHeader';
 
 interface SongWorkspaceProps {
   song: Song;
+  folders: SongFolder[];
   activeId: string | null;
   updateActive: (patch: Partial<Song>) => void;
   onDuplicate: (song: Song) => void;
   onDelete: (id: string) => void;
   onImport: (song: Song) => Promise<void>;
+  onMoveToFolder: (songId: string, folderId: string | null) => void;
 }
 
 export function SongWorkspace({
   song,
+  folders,
   activeId,
   updateActive,
   onDuplicate,
   onDelete,
   onImport,
+  onMoveToFolder,
 }: SongWorkspaceProps) {
   const {
     selectedNoteId,
@@ -60,9 +64,11 @@ export function SongWorkspace({
     <>
       <SongHeader
         song={song}
+        folders={folders}
         isPlaying={isPlaying}
         fileInputRef={fileInputRef}
         onUpdate={updateActive}
+        onMoveToFolder={(folderId) => onMoveToFolder(song.id, folderId)}
         onPlay={playSequence}
         onStop={stopPlayback}
         onExport={handleExport}

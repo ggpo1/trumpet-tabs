@@ -10,12 +10,19 @@ export interface TabNote {
   lyric: string;
 }
 
+export interface SongFolder {
+  id: string;
+  name: string;
+  updatedAt: string;
+}
+
 export interface Song {
   id: string;
   title: string;
   artist: string;
   tempo: number;
   notes: TabNote[];
+  folderId: string | null;
   updatedAt: string;
 }
 
@@ -55,6 +62,16 @@ export function createSong(partial?: Partial<Song>): Song {
     artist: '',
     tempo: 100,
     notes: [],
+    folderId: null,
+    updatedAt: new Date().toISOString(),
+    ...partial,
+  };
+}
+
+export function createFolder(partial?: Partial<SongFolder>): SongFolder {
+  return {
+    id: crypto.randomUUID(),
+    name: 'Новая папка',
     updatedAt: new Date().toISOString(),
     ...partial,
   };
